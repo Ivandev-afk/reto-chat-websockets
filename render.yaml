@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: reto-chat-websockets
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: ALLOWED_ORIGINS
+        value: http://localhost:3000
+      - key: HISTORY_LIMIT
+        value: "50"
+      - key: MAX_MESSAGE_LENGTH
+        value: "500"
+      - key: RATE_LIMIT_MAX
+        value: "5"
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "5000"

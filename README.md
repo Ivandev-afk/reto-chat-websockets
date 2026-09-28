@@ -77,12 +77,25 @@ Variables de entorno opcionales (copia `backend/.env.example` a `backend/.env` s
    abiertos, incluido el remitente — así cada pantalla pinta el mensaje igual, usando
    siempre `textContent` para que no se pueda inyectar HTML.
 
-## Despliegue
+## Despliegue en Render
 
-No incluido todavía: este proyecto está pensado para correr en local primero. Cuando
-quieras publicarlo (Render, Railway, Fly.io, etc.), solo hace falta:
+El repo incluye `render.yaml` (Blueprint) con todo listo: servicio Node, carpeta raíz
+`backend/`, `npm install` como build y `npm start` como arranque.
 
-1. Subir esta carpeta a un repositorio de GitHub.
-2. Desplegar como servicio Node (`npm install` + `npm start`), exponiendo `PORT` (la
-   mayoría de plataformas lo inyectan solas).
-3. Configurar `ALLOWED_ORIGINS` con la URL pública real que te asigne la plataforma.
+1. Entra a [dashboard.render.com](https://dashboard.render.com) e inicia sesión
+   (puedes usar tu cuenta de GitHub).
+2. **New +** → **Blueprint** → conecta tu cuenta de GitHub si no lo está → elige el
+   repositorio `reto-chat-websockets`. Render detecta `render.yaml` solo.
+3. Pulsa **Apply** y espera a que termine el primer deploy. Te va a dar una URL del
+   tipo `https://reto-chat-websockets.onrender.com` (o con un sufijo si el nombre
+   estaba tomado).
+4. Copia esa URL. Ve a **Environment** dentro del servicio y cambia la variable
+   `ALLOWED_ORIGINS` para que sea exactamente esa URL (con `https://`, sin barra al
+   final). Guarda — Render vuelve a desplegar solo.
+5. Abre esa URL en dos pestañas y pruébalo igual que en local. El cliente ya detecta
+   solo que la página se sirve por `https:` y usa `wss://` para el WebSocket.
+
+**Nota:** el plan free de Render "duerme" el servicio tras ~15 min sin tráfico; la
+primera conexión después de eso tarda unos 30-50s en despertar (se verá "Conectando…"
+un rato antes de pasar a "Conectado" — es la reconexión con backoff haciendo su
+trabajo, no un error).
