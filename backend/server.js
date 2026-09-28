@@ -21,7 +21,7 @@ const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX) || 5;
 const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS) || 5000;
 const HEARTBEAT_INTERVAL_MS = 30000;
 
-const PUBLIC_DIR = path.join(__dirname, "public");
+const PUBLIC_DIR = path.join(__dirname, "..", "frontend");
 
 // --- Servidor HTTP: sirve los archivos estáticos del cliente ---
 const server = http.createServer((req, res) => {

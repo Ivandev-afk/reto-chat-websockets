@@ -1,11 +1,14 @@
 # Reto: Chat con WebSockets
 
-Chat en tiempo real. Un único proceso de Node sirve el cliente estático (`public/`)
-y el servidor WebSocket (`ws`) sobre el mismo puerto.
+Chat en tiempo real, separado en dos carpetas:
+
+- `backend/` — servidor Node (HTTP + WebSocket con `ws`).
+- `frontend/` — cliente estático (HTML/CSS/JS), servido por el propio `backend/`.
 
 ## Cómo correrlo
 
 ```bash
+cd backend
 npm install
 npm start
 ```
@@ -13,7 +16,7 @@ npm start
 Abre `http://localhost:3000` en dos pestañas (o dos navegadores) para probarlo
 con dos usuarios a la vez.
 
-Variables de entorno opcionales (copia `.env.example` a `.env` si quieres tocarlas):
+Variables de entorno opcionales (copia `backend/.env.example` a `backend/.env` si quieres tocarlas):
 
 - `PORT` — puerto del servidor (por defecto 3000).
 - `ALLOWED_ORIGINS` — orígenes permitidos para el WebSocket, separados por comas.
@@ -48,8 +51,9 @@ Variables de entorno opcionales (copia `.env.example` a `.env` si quieres tocarl
 
 ## Qué pasa entre el primer clic y el primer mensaje
 
-1. El navegador pide `/` → el servidor HTTP responde `public/index.html`, que a su vez
-   pide `/app.js` y `/styles.css` (mismo servidor, rutas estáticas).
+1. El navegador pide `/` → el servidor HTTP (`backend/server.js`) responde
+   `frontend/index.html`, que a su vez pide `/app.js` y `/styles.css` (mismo servidor,
+   rutas estáticas).
 2. `app.js` se ejecuta y abre inmediatamente un `WebSocket` hacia el mismo host
    (`ws://` o `wss://` según el protocolo de la página). El badge de estado pasa a
    "Conectando…" porque `readyState` vale `0`.
