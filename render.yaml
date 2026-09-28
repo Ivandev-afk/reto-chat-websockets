@@ -9,7 +9,7 @@ services:
     envVars:
       - key: ALLOWED_ORIGINS
         value: http://localhost:3000
-      - key: HISTORY_LIMIT
+      - key: MAX_HISTORY
         value: "50"
       - key: MAX_MESSAGE_LENGTH
         value: "500"

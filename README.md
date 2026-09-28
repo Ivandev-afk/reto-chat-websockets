@@ -77,6 +77,66 @@ Variables de entorno opcionales (copia `backend/.env.example` a `backend/.env` s
    abiertos, incluido el remitente — así cada pantalla pinta el mensaje igual, usando
    siempre `textContent` para que no se pueda inyectar HTML.
 
+## Despliegue en KyraCloud
+
+Backend y frontend van en **dos servidores separados**. El orden importa porque cada
+uno necesita la URL final del otro.
+
+### 1. Backend (servidor tipo "Proyecto", con Docker)
+
+1. En KyraCloud: **Nuevo Servidor** → **Proyecto** → nómbralo (ej. `chat-backend-tunombre`)
+   → plan Pequeño está bien.
+2. Sube `backend.zip` (ya generado en la raíz del repo, con `server.js`, `package.json`
+   y `Dockerfile` en la raíz del zip, sin `node_modules`) y pulsa **Reconstruir**.
+3. En **Variables de Entorno**, pon:
+   - `PORT` = `3000`
+   - `MAX_HISTORY` = `50`
+   - `ALLOWED_ORIGINS` = *(déjalo con un valor provisional, lo ajustas en el paso 3
+     de más abajo, cuando exista la URL del frontend)*
+4. Guarda. Anota la URL pública que te asigna (ej. `https://chat-backend-tunombre.kyracloud.app`).
+5. Verifica `https://<tu-backend>.kyracloud.app/health` → debe responder
+   `{"ok":true,"conectados":0,"mensajesEnHistorial":0,"uptimeSegundos":N}`.
+
+### 2. Frontend (servidor tipo "Hosting Web")
+
+1. Antes de comprimir: edita `frontend/index.html` y cambia
+   `window.CHAT_BACKEND_URL = "";` por la URL **wss://** de tu backend, ej.
+   `window.CHAT_BACKEND_URL = "wss://chat-backend-tunombre.kyracloud.app";`
+2. Regenera `frontend.zip` (PowerShell, desde la raíz del proyecto):
+   ```powershell
+   Compress-Archive -Path frontend/* -DestinationPath frontend.zip -Force
+   ```
+3. En KyraCloud: **Nuevo Servidor** → **Hosting Web** → nómbralo (ej. `chat-web-tunombre`)
+   → plan Pequeño (no ejecuta código).
+4. Sube `frontend.zip`. Anota su URL pública (ej. `https://chat-web-tunombre.kyracloud.app`).
+
+### 3. Unir los dos
+
+1. Vuelve al servidor del **backend** → Variables de Entorno → pon `ALLOWED_ORIGINS`
+   con la URL exacta del frontend del paso anterior (con `https://`, sin barra final).
+2. Guarda (se reconstruye solo).
+3. Abre la URL del frontend, entra con un nombre, manda un mensaje.
+4. En la consola del backend deberías ver líneas como:
+   ```
+   servidor escuchando en el puerto 3000
+   [upgrade] aceptado origin=https://chat-web-tunombre.kyracloud.app
+   [ws] conectado nombre="tu-nombre" total=1
+   [ws] mensaje de="tu-nombre" bytes=N
+   ```
+   Esas capturas ([upgrade] y [cierre] al desconectarte) son parte de lo que pide
+   entregar el reto.
+
+### Regenerar los zips después de cambiar código
+
+```powershell
+# backend (sin node_modules)
+Get-ChildItem backend -Force | Where-Object { $_.Name -ne "node_modules" } |
+  ForEach-Object FullName | Compress-Archive -DestinationPath backend.zip -Force
+
+# frontend
+Compress-Archive -Path frontend/* -DestinationPath frontend.zip -Force
+```
+
 ## Despliegue en Render
 
 El repo incluye `render.yaml` (Blueprint) con todo listo: servicio Node, carpeta raíz

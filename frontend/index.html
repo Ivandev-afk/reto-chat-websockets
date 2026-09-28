@@ -58,6 +58,13 @@
     </section>
   </div>
 
+  <script>
+    // Si el backend vive en otro dominio (por ejemplo en KyraCloud),
+    // pon aquí su URL wss:// completa. Si el mismo servidor sirve este
+    // HTML y el WebSocket (como en local o en Render), deja "" y se
+    // usa automáticamente el mismo origen.
+    window.CHAT_BACKEND_URL = "";
+  </script>
   <script src="/app.js"></script>
 </body>
 </html>

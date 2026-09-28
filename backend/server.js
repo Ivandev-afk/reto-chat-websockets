@@ -14,7 +14,7 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || "http://localhost:3000")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
-const HISTORY_LIMIT = Number(process.env.HISTORY_LIMIT) || 50;
+const HISTORY_LIMIT = Number(process.env.MAX_HISTORY) || 50;
 const MAX_MESSAGE_LENGTH = Number(process.env.MAX_MESSAGE_LENGTH) || 500;
 const MAX_NAME_LENGTH = 20;
 const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX) || 5;
@@ -22,6 +22,7 @@ const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS) || 5000;
 const HEARTBEAT_INTERVAL_MS = 30000;
 
 const PUBLIC_DIR = path.join(__dirname, "..", "frontend");
+const START_TIME = Date.now();
 
 // --- Servidor HTTP: sirve los archivos estáticos del cliente ---
 const server = http.createServer((req, res) => {
@@ -36,8 +37,10 @@ const wss = new WebSocketServer({
     // Sin cabecera Origin (p.ej. clientes no-navegador) la dejamos pasar;
     // si viene Origin, tiene que estar en la lista blanca.
     if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+      console.log(`[upgrade] aceptado origin=${origin || "(sin origin)"}`);
       done(true);
     } else {
+      console.log(`[upgrade] rechazado origin=${origin}`);
       done(false, 403, "Origin no permitido");
     }
   },
@@ -132,8 +135,9 @@ wss.on("connection", (ws, req) => {
     }
   });
 
-  ws.on("close", () => {
+  ws.on("close", (code) => {
     if (ws.userName) {
+      console.log(`[cierre] nombre="${ws.userName}" code=${code}`);
       typingUsers.delete(ws.userName);
       const text = `${ws.userName} se ha desconectado.`;
       pushHistory({ type: "system", text, ts: now() });
@@ -155,6 +159,7 @@ function handleJoin(ws, msg) {
   const finalName = uniqueName(clean);
   ws.userName = finalName;
   ws.joinedAt = now();
+  console.log(`[ws] conectado nombre="${finalName}" total=${wss.clients.size}`);
 
   ws.send(
     JSON.stringify({
@@ -197,6 +202,8 @@ function handleMessage(ws, msg) {
       `El mensaje supera el límite de ${MAX_MESSAGE_LENGTH} caracteres.`
     );
   }
+
+  console.log(`[ws] mensaje de="${ws.userName}" bytes=${Buffer.byteLength(text, "utf8")}`);
 
   const entry = {
     type: "message",
@@ -250,6 +257,23 @@ const MIME = {
 
 function serveStatic(req, res) {
   const urlPath = decodeURIComponent(req.url.split("?")[0]);
+
+  if (urlPath === "/health") {
+    let conectados = 0;
+    for (const client of wss.clients) {
+      if (client.readyState === client.OPEN) conectados++;
+    }
+    res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+    return res.end(
+      JSON.stringify({
+        ok: true,
+        conectados,
+        mensajesEnHistorial: history.length,
+        uptimeSegundos: Math.round((Date.now() - START_TIME) / 1000),
+      })
+    );
+  }
+
   const safePath = path.normalize(urlPath === "/" ? "/index.html" : urlPath);
   const filePath = path.join(PUBLIC_DIR, safePath);
 
@@ -285,6 +309,6 @@ function loadDotEnvIfPresent() {
 }
 
 server.listen(PORT, () => {
-  console.log(`Servidor de chat escuchando en http://localhost:${PORT}`);
+  console.log(`servidor escuchando en el puerto ${PORT}`);
   console.log(`Orígenes permitidos: ${ALLOWED_ORIGINS.join(", ")}`);
 });

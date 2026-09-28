@@ -36,6 +36,11 @@
   const MAX_DELAY_MS = 30000;
 
   function wsUrl() {
+    // Si el frontend y el backend viven en dominios distintos (p.ej. en
+    // KyraCloud), configura window.CHAT_BACKEND_URL en index.html con la
+    // URL wss:// del backend. Si no está definida, se asume que el mismo
+    // servidor sirve el HTML y el WebSocket (mismo origen).
+    if (window.CHAT_BACKEND_URL) return window.CHAT_BACKEND_URL;
     const proto = location.protocol === "https:" ? "wss:" : "ws:";
     return `${proto}//${location.host}`;
   }
