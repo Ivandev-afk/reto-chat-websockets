@@ -10,7 +10,7 @@ COPY server.js ./
 # Valores por defecto para KyraCloud; las variables de entorno del panel los sobrescriben.
 ENV PORT=3000
 ENV MAX_HISTORY=50
-ENV ALLOWED_ORIGINS=http://node-us-east-va.clicfstudios.com:9016
+ENV ALLOWED_ORIGINS=https://frontend-ee5078.kyracloud.com
 
 EXPOSE 3000
 
